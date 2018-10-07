@@ -96,4 +96,4 @@ def make_partition(X, y, args):
             'test': test_set
         }
         list_fold.append(partition)
-        return list_fold
+    return list_fold
