@@ -81,3 +81,49 @@ def make_partition(args):
         }
         list_fold.append(partition)
     return list_fold
+
+
+from decimal import Decimal
+import json 
+from os import listdir
+from os.path import isfile, join
+import pandas as pd
+
+class Writer():
+    
+    def __init__(self, prior_keyword=[], dir='./results'):
+        self.prior_keyword = prior_keyword
+        self.dir = dir
+        
+    def write(self, args, prior_keyword=None):
+        dict_args = vars(args)
+        if 'bar' in dict_args:
+            del dict_args['bar']
+        if prior_keyword:
+            self.prior_keyword = prior_keyword
+        filename = 'exp_{}'.format(args.exp_name)
+        for keyword in self.prior_keyword:
+            value = str(dict_args[keyword])
+            if value.isdigit():
+                filename += keyword + '-{:.2E}'.format(Decimal(dict_args[keyword]))
+            else:
+                filename += keyword + '-{}'.format(value)
+        filename += '.json'
+        
+        with open(self.dir+'/'+filename, 'w') as outfile:
+            json.dump(dict_args, outfile)
+        
+    def read(self, exp_name=''):
+        list_result = list()
+        
+        filenames = [f for f in listdir(self.dir) if isfile(join(self.dir, f))]
+        for filename in filenames:
+            with open(join(self.dir, filename), 'r') as infile:
+                result = json.load(infile)
+                if len(exp_name) > 0:
+                    if result['exp_name'] == exp_name:
+                        list_result.append(result)
+                else:
+                    list_result.append(result)
+                        
+        return pd.DataFrame(list_result)
