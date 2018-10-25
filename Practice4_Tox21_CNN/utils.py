@@ -112,6 +112,7 @@ class Writer():
         
         with open(self.dir+'/'+filename, 'w') as outfile:
             json.dump(dict_args, outfile)
+            
         
     def read(self, exp_name=''):
         list_result = list()
