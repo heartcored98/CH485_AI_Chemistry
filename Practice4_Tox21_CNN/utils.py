@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from rdkit import Chem, DataStructs
 from rdkit.Chem import AllChem
@@ -88,6 +89,7 @@ import json
 from os import listdir
 from os.path import isfile, join
 import pandas as pd
+import hashlib
 
 class Writer():
     
@@ -95,6 +97,11 @@ class Writer():
         self.prior_keyword = prior_keyword
         self.dir = dir
         
+    def generate_hash(self, args):
+        str_as_bytes = str.encode(str(args))
+        hashed = hashlib.sha256(str_as_bytes).hexdigest()[:24]
+        return hashed
+
     def write(self, args, prior_keyword=None):
         dict_args = vars(args)
         if 'bar' in dict_args:
@@ -105,18 +112,18 @@ class Writer():
         for keyword in self.prior_keyword:
             value = str(dict_args[keyword])
             if value.isdigit():
-                filename += keyword + '-{:.2E}'.format(Decimal(dict_args[keyword]))
+                filename += keyword + ':{:.2E}_'.format(Decimal(dict_args[keyword]))
             else:
-                filename += keyword + '-{}'.format(value)
+                filename += keyword + ':{}_'.format(value)
+#         hashcode = self.generate_hash(args)
+#         filename += hashcode
         filename += '.json'
         
         with open(self.dir+'/'+filename, 'w') as outfile:
             json.dump(dict_args, outfile)
             
-        
     def read(self, exp_name=''):
         list_result = list()
-        
         filenames = [f for f in listdir(self.dir) if isfile(join(self.dir, f))]
         for filename in filenames:
             with open(join(self.dir, filename), 'r') as infile:
@@ -128,3 +135,13 @@ class Writer():
                     list_result.append(result)
                         
         return pd.DataFrame(list_result)
+    
+    def clear(self, exp_name=''):
+        filenames = [f for f in listdir(self.dir) if isfile(join(self.dir, f))]
+        for filename in filenames:
+            if len(exp_name) > 0:
+                result = json.load(open(join(self.dir, filename), 'r'))
+                if result['exp_name'] == exp_name:
+                    os.remove(join(self.dir, filename))
+            else:
+                os.remove(join(self.dir, filename))
