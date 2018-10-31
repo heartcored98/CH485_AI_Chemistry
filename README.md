@@ -7,4 +7,6 @@ This repository includes weekly reports submitted as in-class assignment of 2018
 **week3** : Binary classification with MLP model on Tox21 dataset using pytorch.  
 **week4** : Regression with CNN model on logP dataset using pytorch.  
 **week5** : Regression with GCN model on logP dataset using pytorch.
+**week6** : smiles RNN based task
+
 
