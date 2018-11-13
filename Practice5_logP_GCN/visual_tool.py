@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -32,7 +33,7 @@ def generate_setting(args, var1, var2):
                 output += '-'*91 + '\n'
     return output
 
-def plot_performance(results, variable1, variable2, title='', filename=''):
+def plot_performance(results, variable1, variable2, args, title='', filename=''):
     fig, ax = plt.subplots(1, 2)
 
     fig.set_size_inches(15, 6)
@@ -74,7 +75,7 @@ def plot_distribution(results, variable1, variable2, x='true_y', y='pred_y', tit
     g.map(identity)
     g.set_axis_labels(x, y)
     g.fig.suptitle(title) # can also get the figure from plt.gcf()
-    plt.subplots_adjust(top=kwargs.get('top',0.93))
+    plt.subplots_adjust(top=kwargs.get('top', 0.93))
     filename = filename if len(filename) > 0 else title
     plt.savefig('./images/{}.png'.format(filename))
 
@@ -129,9 +130,10 @@ def plot_loss(results, variable1, variable2, x='true_y', y='pred_y', title='', f
     g.fig.suptitle(title) # can also get the figure from plt.gcf()
     g.add_legend()
     
-    for ax in g.axes().flatten():
+    #print(g.axes())
+    for ax in g.axes.flatten():
         ax.set_ylim(lossmin, lossmax)
     
-    plt.subplots_adjust(top=kwargs.get('top',0.93))
+    plt.subplots_adjust(top=kwargs.get('top', 0.93))
     filename = filename if len(filename) > 0 else title
     plt.savefig('./images/{}.png'.format(filename))
