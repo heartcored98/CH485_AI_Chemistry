@@ -87,7 +87,7 @@ def one_of_k_encoding_unk(x, allowable_set):
 def char_to_ix(x, allowable_set):
     if x not in allowable_set:
         raise Exception("input {0} not in allowable set{1}:".format(x, allowable_set))
-    return [allowable_set.index(x)]
+    return [allowable_set.index(x)+1]
     
 
 
