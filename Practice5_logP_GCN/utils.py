@@ -5,10 +5,29 @@ from rdkit.Chem import AllChem
 from rdkit.Chem.Crippen import MolLogP
 from rdkit.Chem.rdMolDescriptors import CalcTPSA
 from torch.utils.data import Dataset
+from scipy.linalg import fractional_matrix_power
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split, KFold
+from tqdm import tqdm_notebook
 
-    
+"""
+Normalization Ref: https://tkipf.github.io/graph-convolutional-networks/
+"""
+
+def normalize(mx):
+    """Row-normalize sparse matrix"""
+    rowsum = np.diag(np.array(mx.sum(1)))
+    r_inv = np.linalg.matrix_power(rowsum, -1)
+    r_inv[np.isinf(r_inv)] = 0.
+    return r_inv.dot(mx)
+
+def normalize_adj(mx):
+    """Symmetry Normalization"""
+    rowsum = np.diag(np.array(mx.sum(1)))
+    r_inv = fractional_matrix_power(rowsum, -0.5)
+    r_inv[np.isinf(r_inv)] = 0.
+    return r_inv.dot(mx).dot(r_inv)
+
 def read_ZINC(num_mol):
     f = open('../Data/logP/ZINC.smiles', 'r')
     contents = f.readlines()
@@ -17,7 +36,7 @@ def read_ZINC(num_mol):
     fps = []
     logP = []
     tpsa = []
-    for i in range(num_mol):
+    for i in tqdm_notebook(range(num_mol)):
         smi = contents[i].strip()
         list_smi.append(smi)
         m = Chem.MolFromSmiles(smi)
@@ -39,7 +58,7 @@ def convert_to_graph(smiles_list):
     adj_norm = []
     features = []
     maxNumAtoms = 50
-    for i in smiles_list:
+    for i in tqdm_notebook(smiles_list):
         # Mol
         iMol = Chem.MolFromSmiles(i.strip())
         #Adj
@@ -54,9 +73,10 @@ def convert_to_graph(smiles_list):
             iFeature[0:len(iFeatureTmp), 0:19] = iFeatureTmp ### 0 padding for feature-set
             features.append(iFeature)
 
-            # Adj-preprocessing
+            # Adj-preprocessing & Symmetrically normalizing the adj matrix.
             iAdj = np.zeros((maxNumAtoms, maxNumAtoms))
-            iAdj[0:len(iFeatureTmp), 0:len(iFeatureTmp)] = iAdjTmp + np.eye(len(iFeatureTmp))
+            iAdj[0:len(iFeatureTmp), 0:len(iFeatureTmp)] =  normalize_adj(iAdjTmp + np.eye(len(iFeatureTmp)))
+#             iAdj[0:len(iFeatureTmp), 0:len(iFeatureTmp)] = iAdjTmp + np.eye(len(iFeatureTmp))
             adj.append(np.asarray(iAdj))
     features = np.asarray(features)
     adjs = np.array(adj)
@@ -119,8 +139,8 @@ def make_partition(num_mol, val_size, test_size, seed):
 
     # Construct dataset object
     train_set = myDataset(X1_train, X2_train, y_train)
-    val_set = myDataset(X1_val, X2_train, y_val)
-    test_set = myDataset(X1_test, X2_train, y_test)
+    val_set = myDataset(X1_val, X2_val, y_val)
+    test_set = myDataset(X1_test, X2_test, y_test)
 
     partition = {
         'train': train_set,

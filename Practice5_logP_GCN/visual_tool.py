@@ -52,7 +52,7 @@ def plot_performance(results, variable1, variable2, args, title='', filename='')
     plt.savefig('./images/{}.png'.format(filename))
 
 
-def plot_distribution(results, variable1, variable2, x='true_y', y='pred_y', title='', filename='', **kwargs):
+def plot_distribution(results, variable1, variable2, x='true_y', y='pred_y', metric='best_mae', title='', filename='', **kwargs):
     list_v1 = results[variable1].unique()
     list_v2 = results[variable2].unique()
     list_data = list()
@@ -63,12 +63,19 @@ def plot_distribution(results, variable1, variable2, x='true_y', y='pred_y', tit
 
             best_true_y = list(row.best_true_y)[0]
             best_pred_y = list(row.best_pred_y)[0]
+            best_metric = list(row[metric])[0]
             for i in range(len(best_true_y)):
-                list_data.append({x:best_true_y[i], y:best_pred_y[i], variable1:value1, variable2:value2})
+                list_data.append({x:best_true_y[i], y:best_pred_y[i], metric:best_metric, variable1:value1, variable2:value2})
     df = pd.DataFrame(list_data)
 
     g = sns.FacetGrid(df, row=variable2, col=variable1, margin_titles=True)
-    g.map(plt.scatter, x, y, alpha=0.3)
+    def show_mae(x, y, metric, **kwargs):
+        plt.scatter(x, y, alpha=0.3)
+        metric = "MAE: {:1.3f}".format(list(metric.values)[0])
+        plt.text(0.05, 0.95, metric,  horizontalalignment='left', verticalalignment='center', transform=plt.gca().transAxes, bbox=dict(facecolor='yellow', alpha=0.5, boxstyle="round,pad=0.1"))
+        
+#     g.map(plt.scatter, x, y, alpha=0.3)
+    g.map(show_mae, x, y, metric)
 
     def identity(**kwargs):
         plt.plot(np.linspace(-4,4,50), np.linspace(-4,4,50),'k',linestyle='dashed')
