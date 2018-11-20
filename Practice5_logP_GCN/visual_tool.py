@@ -33,7 +33,7 @@ def generate_setting(args, var1, var2):
                 output += '-'*91 + '\n'
     return output
 
-def plot_performance(results, variable1, variable2, args, title='', filename=''):
+def plot_performance(results, variable1, variable2, title='', filename='', args=None):
     fig, ax = plt.subplots(1, 2)
 
     fig.set_size_inches(15, 6)
@@ -45,7 +45,8 @@ def plot_performance(results, variable1, variable2, args, title='', filename='')
     font.set_family('monospace')
     font.set_size('large')
     alignment = {'horizontalalignment': 'center', 'verticalalignment': 'baseline'}
-    fig.text(0.5, -0.6, generate_setting(args, variable1, variable2), fontproperties=font, **alignment)
+    if args:
+        fig.text(0.5, -0.6, generate_setting(args, variable1, variable2), fontproperties=font, **alignment)
     
     fig.suptitle(title)
     filename = filename if len(filename) > 0 else title
@@ -70,7 +71,7 @@ def plot_distribution(results, variable1, variable2, x='true_y', y='pred_y', met
 
     g = sns.FacetGrid(df, row=variable2, col=variable1, margin_titles=True)
     def show_mae(x, y, metric, **kwargs):
-        plt.scatter(x, y, alpha=0.3)
+        plt.scatter(x, y, alpha=0.3, s=1)
         metric = "MAE: {:1.3f}".format(list(metric.values)[0])
         plt.text(0.05, 0.95, metric,  horizontalalignment='left', verticalalignment='center', transform=plt.gca().transAxes, bbox=dict(facecolor='yellow', alpha=0.5, boxstyle="round,pad=0.1"))
         
@@ -113,7 +114,7 @@ def plot_loss(results, variable1, variable2, x='true_y', y='pred_y', title='', f
     df = pd.DataFrame(list_data)
     ymax = df['mae'].max()
     ymin = df['mae'].min()
-    
+
     temp_loss = df.loc[df['loss'] < df['loss'].quantile(0.98)]
     lossmax = temp_loss['loss'].max()
     lossmin = temp_loss['loss'].min()
@@ -128,7 +129,7 @@ def plot_loss(results, variable1, variable2, x='true_y', y='pred_y', title='', f
     def mae_line(x, y, **kwargs):
         ax2 = plt.gca().twinx()
         ax2.plot(x, y,'g--')
-        ax2.set_ylim(kwargs['ymax']*1.05, kwargs['ymin']*0.95)
+        ax2.set_ylim(kwargs['ymax']*1.1, kwargs['ymin']*0.9)
         ax2.grid(False)
 
     g.map(plt.plot, x, y)
